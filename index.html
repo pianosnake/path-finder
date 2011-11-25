@@ -44,12 +44,13 @@ function getPosition(event){
     p = x+"-"+y; 
     
         if(!startPt.x){
-            startPt ={x:x,y:y,v:v,p:p}
+        	//define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
+            startPt ={x:x,y:y,v:v,p:p,g:0,f:1000000};
            setHtml("startDiv","x "+x + " y "+ y + " v "+v); 
         }else{
            setHtml("endDiv","x "+x + " y "+ y + " v "+v);   
             endPt ={x:x,y:y,v:v,p:p}
-            makeRed(x,y);
+            changeColor(x,y);
         }
         
         console.log("x:",x,"y:",y," ",p);
@@ -57,9 +58,10 @@ function getPosition(event){
 function setHtml(div,html){
     document.getElementById(div).innerHTML = html; 
 }
-function makeRed(x,y){
+function changeColor(x,y){
     var i = context.createImageData(1,1);
-    //keep the first color the same 
+    //keep the first color the same so that we can still compute the algorithm based on it
+    //but change the other two so we can see a different color 
     i.data= [context.getImageData(x,y,1,1).data[0],255,0,255];
     context.putImageData(i,x,y);
 }
@@ -68,64 +70,89 @@ function makeRed(x,y){
 //key is the a point named 'x-y' and value is an array [open/closed,parent,fscore,gscore]
 var e={}; 
 //lowest cost point 
-var lcpt={p:null,f:100000,x:null,y:null,g:0}; 
+var lcpt; 
 
 
 function runAlgo(){
-    console.log("running algo,lcptis",lcpt); 
+ 
 
     //add start point to the open list 
     e[startPt.p]=[1,null,0,0];
     lcpt = startPt;
     
+       console.log("running algo,lcptis",lcpt); 
+       
     //iterate through open list until the end point is in the closed list 
     while(!ptOpenOrClosed(endPt,0)){
+   // for(var i=0; i<50; i++){
         iterateOpen();
     }
+    drawPath(); 
 }
 function ptOpenOrClosed(a,b){
     //return true is point is in 'e' and if the first item in its array is a 0 (for closed) 
     if(e[a.p]){
-        if(e[a.p][b]){
-            //if true, then it's open list 
-            return false;
+        if(e[a.p].o==b){
+            return true;
         }else{
-            //it's in the closed list 
-            return true; 
+            return false; 
         }
     }else{
         return false; 
     }
 }
 function iterateOpen(){
-    //move point to the closed list 
-    e[lcpt.p][0]=0;
+    //pick the point with the lowest score and move point to the closed list
+    pickLowestPoint(); 
+    e[lcpt.p].o=0;
+    
     //get the neighbors 
-    var neighs = getNeighbors(lcpt.p);
-    //for each neighbor, if it's in the closed list, then ignore it
-    for (var i=0;i<neighs.length;i++){
-        n= neighs[i]; 
+
+    var neighs = getNeighbors(lcpt);
+     
+    for (var i=0,l=neighs.length;i<l;i++){
+        var n= neighs[i]; 
         if(ptOpenOrClosed(n,0)){
+        	//if it's in the closed list, ignore it
             continue; 
         }
+        
         if(ptOpenOrClosed(n,1)){
             //if in open list check score to see if this approach is better
-            if(e[n.p][3]>(n.g+lcpt.g)){
+            var en = e[n.p];
+            if(en.g>(n.g+lcpt.g+n.d)){
                 //update the score to approaching it from this pt 
-               e[n.p][3]= n.g+lcpt.g;
-               //updat the parent to this
-               e[n.p][1]= n.p ; 
+               en.g= n.g+lcpt.g+n.d;
+               //update the parent to this
+               en.par= n.p; 
+              // console.log("!!upd ",en.p);
             }
         }else{
             //if not in open list then add it to the open list 
             //make the parent the current point 
-            var f = n.g+n.d+n.h; 
-            e[n.p]=[1,lcpt.p,f,n.g+lcpt.g];
-            isThisLowest(n); 
+            e[n.p]=n;
+            e[n.p]['par'] = lcpt.p;
+            e[n.p]['o']= 1;
+            e[n.p]['g']= n.g+lcpt.g+n.d;
+            e[n.p]['f']= n.g+lcpt.g+n.d+n.h;
+            //console.log('enp is now',e[n.p]);
+            //we're adding a new point to the open list, so check to see if it has a low score
+            
         }
         
     }
 }
+function pickLowestPoint(){
+	var f = 10000; 
+	for (var i in e){
+		if(e[i].o && e[i].f <f ){
+			f=e[i].f; 
+			lcpt = e[i];
+		}	
+	}
+}
+	
+
 function isThisLowest(n){
     if(n.f<lcpt.f){
         lcpt = n; 
@@ -137,31 +164,45 @@ function getNeighbors(p){
 // p: 'x-y'  the written form of the point
 // x: x value
 // y: y value 
-// d: the absolute difference of moving from p to n
+// d: the absolute difference in pixel values of moving from p to n
 // g: if the point is to the right, left, up or down then a 2.  if diagonal then a 3 
 // h: the heuristic, the manhattan distance to get from this point to the endPt
+// f: the sum of g and h 
+
     var neighs = [];
-    var curVal = context.getImageData(p.x,p.y,1,1).data[0]
+    var curVal = context.getImageData(p.x,p.y,1,1).data[0]; 
     for (var i=-1;i<2;i++){
+    	//stay within the x bounds of the image 
         if(p.x+i>=0 && p.x+i<width){
-        for (var j=-1;j<2;j++){
-            if(p.y+j>=0 && p.y+j<height && (j || i)){
-                var pi = p.x+i; 
-                var pj = p.y+j; 
-                var neighVal = context.getImageData(pi,pj,1,1).data[0];
-                    neighs.push({
-                        p:pi+'-'+pj,
-                        x:pi,
-                        y:pj,
-                        d:Math.abs(curVal-neighVal),
-                        g:(pi!=p.x && pj!=p.y)?3:2,
-                        h:Math.abs(endPt.x-pi)+Math.abs(endPt.y-pj)
-                    }); 
-            }   
-            }
+	        for (var j=-1;j<2;j++){
+	        	//stay within the y bounds of the image, and ignore if when the neighbor given the same point 
+	            if(p.y+j>=0 && p.y+j<height && (j || i)){
+	                var pi = p.x+i; 
+	                var pj = p.y+j; 
+	                var neighVal = context.getImageData(pi,pj,1,1).data[0];
+	                	var n ={
+	                        p:pi+'-'+pj,
+	                        x:pi,
+	                        y:pj,
+	                        d:Math.abs(curVal-neighVal),
+	                        g:(pi!=p.x && pj!=p.y)?3:2,
+	                        h:Math.abs(endPt.x-pi)+Math.abs(endPt.y-pj)
+	                    };
+	                neighs.push(n); 
+	           }	   
+	        }
        } 
     }
     return neighs; 
+}
+
+function drawPath(){
+	var par =e[endPt.p].par;
+	changeColor(e[par].x,e[par].y);
+	while(e[par]){
+		par =e[par].par;
+		changeColor(e[par].x,e[par].y);
+	}
 }
 </script> 
 
