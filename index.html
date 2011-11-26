@@ -5,7 +5,7 @@
 <script>
 //from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
 document.addEventListener("DOMContentLoaded", init, false);
-var imageData,context,canvas; 
+var imageData,context,canvas,path; 
 var width=341,height=487;
 var startPt={};
 var endPt={}; 
@@ -14,12 +14,14 @@ var endPt={};
 function init(){
     canvas = document.getElementById("myCanvas");
     context = canvas.getContext('2d');
+   
     var img = new Image();
     img.onload = function(){
         context.drawImage(img,0,0);
      }
     //set the source of the image after you define the onload event 
     img.src = '28497307.png'; 
+  imageData = context.getImageData(0,0,width,height);
     canvas.addEventListener("mousedown", getPosition, false);
 }
 
@@ -45,7 +47,7 @@ function getPosition(event){
     
         if(!startPt.x){
         	//define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
-            startPt ={x:x,y:y,v:v,p:p,g:0,f:1000000};
+            startPt ={x:x,y:y,v:v,p:p,g:0,f:0,par:null,o:1};
            setHtml("startDiv","x "+x + " y "+ y + " v "+v); 
         }else{
            setHtml("endDiv","x "+x + " y "+ y + " v "+v);   
@@ -58,35 +60,26 @@ function getPosition(event){
 function setHtml(div,html){
     document.getElementById(div).innerHTML = html; 
 }
-function changeColor(x,y){
-    var i = context.createImageData(1,1);
-    //keep the first color the same so that we can still compute the algorithm based on it
-    //but change the other two so we can see a different color 
-    i.data= [context.getImageData(x,y,1,1).data[0],255,0,255];
-    context.putImageData(i,x,y);
-}
 
 //the 'everything' object holds the open/closed list, parents, g and f scores 
 //key is the a point named 'x-y' and value is an array [open/closed,parent,fscore,gscore]
 var e={}; 
 //lowest cost point 
-var lcpt; 
+var low; 
 
 
 function runAlgo(){
- 
-
     //add start point to the open list 
-    e[startPt.p]=[1,null,0,0];
-    lcpt = startPt;
+    e[startPt.p]=startPt;
     
-       console.log("running algo,lcptis",lcpt); 
+    console.log("running algo"); 
        
     //iterate through open list until the end point is in the closed list 
     while(!ptOpenOrClosed(endPt,0)){
    // for(var i=0; i<50; i++){
         iterateOpen();
     }
+    console.log("done.");
     drawPath(); 
 }
 function ptOpenOrClosed(a,b){
@@ -104,11 +97,10 @@ function ptOpenOrClosed(a,b){
 function iterateOpen(){
     //pick the point with the lowest score and move point to the closed list
     pickLowestPoint(); 
-    e[lcpt.p].o=0;
+    e[low.p].o=0;
     
     //get the neighbors 
-
-    var neighs = getNeighbors(lcpt);
+    var neighs = getNeighbors(low);
      
     for (var i=0,l=neighs.length;i<l;i++){
         var n= neighs[i]; 
@@ -120,21 +112,21 @@ function iterateOpen(){
         if(ptOpenOrClosed(n,1)){
             //if in open list check score to see if this approach is better
             var en = e[n.p];
-            if(en.g>(n.g+lcpt.g+n.d)){
+            if(en.g>(n.g+low.g+n.d)){
                 //update the score to approaching it from this pt 
-               en.g= n.g+lcpt.g+n.d;
+               en.g= n.g+low.g+n.d;
                //update the parent to this
-               en.par= n.p; 
+               en.par= low.p; 
               // console.log("!!upd ",en.p);
             }
         }else{
             //if not in open list then add it to the open list 
             //make the parent the current point 
             e[n.p]=n;
-            e[n.p]['par'] = lcpt.p;
+            e[n.p]['par'] = low.p;
             e[n.p]['o']= 1;
-            e[n.p]['g']= n.g+lcpt.g+n.d;
-            e[n.p]['f']= n.g+lcpt.g+n.d+n.h;
+            e[n.p]['g']= n.g+low.g+n.d;
+            e[n.p]['f']= n.g+low.g+n.d+n.h;
             //console.log('enp is now',e[n.p]);
             //we're adding a new point to the open list, so check to see if it has a low score
             
@@ -147,15 +139,15 @@ function pickLowestPoint(){
 	for (var i in e){
 		if(e[i].o && e[i].f <f ){
 			f=e[i].f; 
-			lcpt = e[i];
+			low = e[i];
 		}	
 	}
 }
 	
 
 function isThisLowest(n){
-    if(n.f<lcpt.f){
-        lcpt = n; 
+    if(n.f<low.f){
+        low = n; 
     }
 }
 
@@ -196,13 +188,26 @@ function getNeighbors(p){
     return neighs; 
 }
 
+
+
+function changeColor(x, y) {
+    
+}
+
+
 function drawPath(){
 	var par =e[endPt.p].par;
-	changeColor(e[par].x,e[par].y);
-	while(e[par]){
-		par =e[par].par;
-		changeColor(e[par].x,e[par].y);
+    context.strokeStyle = "red"; 
+    context.beginPath();
+    context.moveTo(endPt.x, endPt.y);
+	var ct=0;
+    while(e[par]){
+        ct++; 
+        context.lineTo(e[par].x, e[par].y);
+        par =e[par].par; 
 	}
+    context.stroke();
+    console.log(ct);
 }
 </script> 
 
