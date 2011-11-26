@@ -7,8 +7,8 @@
 document.addEventListener("DOMContentLoaded", init, false);
 var imageData,context,canvas,path; 
 var width=341,height=487;
-var startPt={};
-var endPt={}; 
+var startPt,endPt;
+
 
 
 function init(){
@@ -45,7 +45,7 @@ function getPosition(event){
     v = context.getImageData(x,y,1,1).data[0];
     p = x+"-"+y; 
     
-        if(!startPt.x){
+        if(!startPt){
         	//define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
             startPt ={x:x,y:y,v:v,p:p,g:0,f:0,par:null,o:1};
            setHtml("startDiv","x "+x + " y "+ y + " v "+v); 
@@ -81,6 +81,8 @@ function runAlgo(){
     }
     console.log("done.");
     drawPath(); 
+    startPt = null;
+    endPt = null; 
 }
 function ptOpenOrClosed(a,b){
     //return true is point is in 'e' and if the first item in its array is a 0 (for closed) 
@@ -104,20 +106,21 @@ function iterateOpen(){
      
     for (var i=0,l=neighs.length;i<l;i++){
         var n= neighs[i]; 
+        var g = n.g+low.g+n.d;
+        
         if(ptOpenOrClosed(n,0)){
         	//if it's in the closed list, ignore it
             continue; 
         }
         
         if(ptOpenOrClosed(n,1)){
-            //if in open list check score to see if this approach is better
+            //if neighbor is in open list already check score to see if this approach is better
             var en = e[n.p];
-            if(en.g>(n.g+low.g+n.d)){
+            if(en.g>g){
                 //update the score to approaching it from this pt 
-               en.g= n.g+low.g+n.d;
+               en.g= g;
                //update the parent to this
-               en.par= low.p; 
-              // console.log("!!upd ",en.p);
+               en.par= low.p;
             }
         }else{
             //if not in open list then add it to the open list 
@@ -125,13 +128,9 @@ function iterateOpen(){
             e[n.p]=n;
             e[n.p]['par'] = low.p;
             e[n.p]['o']= 1;
-            e[n.p]['g']= n.g+low.g+n.d;
-            e[n.p]['f']= n.g+low.g+n.d+n.h;
-            //console.log('enp is now',e[n.p]);
-            //we're adding a new point to the open list, so check to see if it has a low score
-            
+            e[n.p]['g']= g;
+            e[n.p]['f']= g+n.h;           
         }
-        
     }
 }
 function pickLowestPoint(){
