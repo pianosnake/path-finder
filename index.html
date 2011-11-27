@@ -5,23 +5,21 @@
 <script>
 //from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
 document.addEventListener("DOMContentLoaded", init, false);
-var imageData,context,canvas,path; 
-var width=341,height=487;
-var startPt,endPt;
-
+var context,canvas,startPt,endPt; 
+//var width=341,height=487;
+var width=68,height=96;
 
 
 function init(){
     canvas = document.getElementById("myCanvas");
     context = canvas.getContext('2d');
-   
+    
     var img = new Image();
     img.onload = function(){
-        context.drawImage(img,0,0);
+        context.drawImage(img,0,0,width,height);
      }
     //set the source of the image after you define the onload event 
     img.src = '28497307.png'; 
-  imageData = context.getImageData(0,0,width,height);
     canvas.addEventListener("mousedown", getPosition, false);
 }
 
@@ -175,7 +173,7 @@ function getNeighbors(p){
 	                        p:pi+'-'+pj,
 	                        x:pi,
 	                        y:pj,
-	                        d:Math.abs(curVal-neighVal),
+	                        d:Math.abs(curVal-neighVal)*5,
 	                        g:(pi!=p.x && pj!=p.y)?3:2,
 	                        h:Math.abs(endPt.x-pi)+Math.abs(endPt.y-pj)
 	                    };
@@ -206,15 +204,18 @@ function drawPath(){
         par =e[par].par; 
 	}
     context.stroke();
-    console.log(ct);
+    setHtml("pathDiv","points "+ct + " difficulty "+e[endPt.p].g );
 }
 </script> 
 
 <body>
-<canvas id="myCanvas" width="341" height="487"></canvas>
-<div id="startDiv">Start Point</div>
-<div id="endDiv">End Point</div>
-<p><a href='javascript:runAlgo()'>Run algo</a></p>
+<canvas id="myCanvas" width="341" height="487" style="float:left"></canvas>
+<div style="float:left; padding-left:10px;">Click elevation model twice to set start and end points<br>
+    Start: <span id="startDiv"></span><br>
+    End: <span id="endDiv"></span><br>
+    Path: <span id="pathDiv"></span>
+    <p><a href='javascript:runAlgo()'>Find path</a></p>
+</div>
 </body>
 
 </html>
