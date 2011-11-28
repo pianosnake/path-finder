@@ -1,7 +1,6 @@
-//from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
 document.addEventListener("DOMContentLoaded", init, false);
 var context,canvas,startPt,endPt,imageData; 
-var width=341,height=487;
+var width=453,height=373;
 //var width=136,height=192;
 //var width=68,height=96;
 
@@ -16,7 +15,7 @@ function init(){
         imageData = context.getImageData(0,0,width,height).data;
      }
     //set the source of the image after you define the onload event 
-    img.src = '28497307.png';
+    img.src = 'deer_ridge.png';
      
     //non IE 
     canvas.addEventListener("mousedown", setEndPoints, false);
@@ -25,7 +24,7 @@ function init(){
 
 
 function getPosition(event){
-    //function called when user clicks on canvas
+    //from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
     var x,y,v;
     if (event.x != undefined && event.y != undefined){
         x = event.x;
@@ -57,7 +56,16 @@ function setEndPoints(event){
     var p = pt.x+"-"+pt.y;
     if(!startPt){
         //define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
-        startPt ={x:pt.x,y:pt.y,v:pt.v,p:p,g:0,f:0,par:null,o:1,i:null};
+        startPt ={x:pt.x,
+			y:pt.y,
+			v:pt.v,
+			p:p,
+			g:0,
+			f:0,
+			par:null,
+			o:1,
+			i:null
+		};
        setHtml("startDiv","x "+pt.x + " y "+ pt.y + " v "+pt.v); 
     }else{
        setHtml("endDiv","x "+pt.x + " y "+ pt.y + " v "+pt.v);   
@@ -126,10 +134,10 @@ function iterateOpen(){
     e[low.p].o=0;
  
     //get the neighbors 
-    var neighs = getNeighbors(low);
+    var ns = getNeighbors(low);
      
-    for (var i=0,l=neighs.length;i<l;i++){
-        var n= neighs[i];
+    for (var i=0,l=ns.length;i<l;i++){
+        var n= ns[i];
         //calculate the g score for the neighbor 
         var g = n.g+low.g+n.d;
         
@@ -153,18 +161,36 @@ function iterateOpen(){
         }else{
             //if not in open list then add it to the open list 
             //make the parent the current point 
-            n['par'] = low.p;
-            n['g']= g;
-            n['o']= 1;
-            n['f']= g+n.h;
-            n['i']= null;
+            n.par = low.p;
+            n.g= g;
+            n.o= 1;
+            n.f= g+n.h;
+            n.i= null;
             e[n.p]=n;
             o.pushHeap(n); 
         }
     }
 }
 
-
+//the neighbor addresses 
+var nba =[
+//n
+[0,-1,2],
+//s
+[0,1,2],
+//e
+[1,0,2],
+//w
+[-1,0,2],
+//nw
+[-1,-1,3],
+//ne
+[1,-1,3],
+//sw
+[-1,1,3],
+//se
+[1,1,3]
+]; 
 
 function getNeighbors(p){
 //returns an array of all the neighbors.  each point is an object with properties
@@ -175,43 +201,34 @@ function getNeighbors(p){
 // g: if the point is to the right, left, up or down then a 2.  if diagonal then a 3 
 // h: the heuristic, the manhattan distance to get from this point to the endPt
 
-    var neighs = [];
-    //var curVal = context.getImageData(p.x,p.y,1,1).data[0]; 
-    //if you put imageData instead of imageData.data, you get a cool looking error 
-    var curVal = imageData[4*(p.x+width*p.y)];
-    for (var i=-1;i<2;i++){
-    	//stay within the x bounds of the image 
-        if(p.x+i>=0 && p.x+i<width){
-	        for (var j=-1;j<2;j++){
-	        	//stay within the y bounds of the image, and ignore when loop gives same point as p 
-	            if(p.y+j>=0 && p.y+j<height && (j || i)){
-	                var pi = p.x+i; 
-	                var pj = p.y+j; 
-	                //var neighVal = context.getImageData(pi,pj,1,1).data[0];
-	                var neighVal = imageData[4*(pi+width*pj)];
-	                	var n ={
-	                        p:pi+'-'+pj,
-	                        x:pi,
-	                        y:pj,
-	                        d:Math.abs(curVal-neighVal)*5,
-	                        g:(pi!=p.x && pj!=p.y)?3:2,
-	                        h:Math.abs(endPt.x-pi)+Math.abs(endPt.y-pj)
-	                    };
-	                neighs.push(n); 
-	           }	   
-	        }
+    var ns = [];
+    for (var a=0;a<8;a++){
+		var nx = p.x+nba[a][0], 
+			ny = p.y+nba[a][1]; 
+		//stay within the bounds of the image
+        if(nx>=0 && nx<width && ny>=0 && ny<height){
+			var nv= imageData[4*(nx+width*ny)];
+			ns.push({
+				p:nx+'-'+ny,
+				x:nx,
+				y:ny,
+				v:nv,
+				d:Math.abs(p.v-nv)*5,
+				g:nba[a][2],
+				h:Math.abs(endPt.x-nx)+Math.abs(endPt.y-ny)
+			}); 
        } 
     }
-    return neighs; 
+    return ns; 
 }
 
 
 function drawPath(){
-	var par =e[endPt.p].par;
+	var par =e[endPt.p].par
+		ct =0;
     context.strokeStyle = "red"; 
     context.beginPath();
     context.moveTo(endPt.x, endPt.y);
-	var ct=0;
     while(e[par]){
         ct++; 
         context.lineTo(e[par].x, e[par].y);

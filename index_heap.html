@@ -7,7 +7,7 @@
 </head>
 
 <body>
-<canvas id="myCanvas" width="341" height="487" style="float:left">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
+<canvas id="myCanvas" width="453" height="373" style="float:left">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
 <div style="float:left; padding-left:10px;">
     <b>Start:</b> <span id="startDiv">Click elevation model to set start point</span><br>
     <b>End:</b> <span id="endDiv">Click elevation model to set end point</span><br>
@@ -23,7 +23,7 @@
 <p>Notes</p>
 <ul>
 <li>Works fastest in Chrome. Will not even load in IE7 or earlier.</li>
-<li>Image from the USGS 1/3-Arc Second National Elevation Dataset. And we're losing a lot of detail going from a TIFF to a PNG. </li>
+<li>Image from the USGS 1/3-Arc Second National Elevation Dataset. And we're losing a lot of detail going from a TIFF to a PNG. This algorithm will work on any image loaded into the canvas element, but the results might be funky when using a color image or any terrain with shaded relief.</li>
 <li>Use a binary heap to quickly get the item with the lowest f-score.  This is a tremenduous improvement over looping over arrays.</li> 
 <li>Use objects to store lists for quick lookup.  Again, much faster than looping over arrays. </li>
 <li>Use a stored image data instead of getImageData</li>
