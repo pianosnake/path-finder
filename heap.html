@@ -1,104 +1,21 @@
 <html>
 <body>
 <html>
-<script>
 
-//description of algorithm from http://www.policyalmanac.org/games/binaryHeaps.htm
-Array.prototype.pushHeap =  function(v){
-    //add item to the end
-    var l = this.push(v); 
-    var h= Math.floor(l/2);
-    var p = this[h-1];
-    var vpos = l-1; 
-    
-    //repeat while v's f-score is lower than the parent's
-    while(p && v.f<p.f ){
-        //swap the parent with v
-        this[h-1] = v;
-        this[vpos] = p; 
-        vpos=h-1; 
-        h=Math.floor(h/2);
-        p=this[h-1];
-    }
-    return l; 
-}
-
-Array.prototype.updateHeap =  function(idx){
-    //when the score of an item changes, it needs to be compared to its parent again to see if it needs to move
-    //the parent in a 1-based index is floor(x/2).  but in a 0-based index it's ceil(x/2)-1
-    var h= Math.ceil(idx/2)-1;
-    var p = this[h];
-    var v = this[idx];
-    var vpos =idx; 
-    //repeat while v's f-score is lower than the parent's
-    while(p && v.f<p.f ){
-        //swap the parent with v
-        this[h] = v;
-        this[vpos] = p;
-        vpos =h; 
-        h=Math.ceil(h/2)-1;
-        p=this[h];
-    } 
-}
-
-Array.prototype.shiftHeap =  function(v){
-    if(this.length<3){
-        //regular shift if there are 0,1 or 2 items in array
-       return this.shift(); 
-    }
-    //remove the first element
-    var r = this.shift();
-    //put the last element first 
-    this.unshift(this.pop()); 
-    var pos = 0,p2;
-    //the first two kids are at index 1 and 2 
-    var kid1 = this[1]; 
-    var kid2 = this[2]; 
-    var v= this[pos]; 
-    
-    //repeat while parent's f-score is greater than either of its two children 
-    while((kid1 && v.f>kid1.f) || (kid2 && v.f>kid2.f)){
-        //swap it with the lowest of the two
-        if(!kid2 || kid1.f<=kid2.f){
-            //if kid 2 is undefined, swap parent with kid1 
-            this[pos] = kid1; 
-            pos = pos*2 +1;
-        }else{
-            this[pos] = kid2; 
-            pos = pos*2 +2;
-        }
-        this[pos]=v; 
-        p2 = pos*2;
-        kid1 = this[p2+1];
-        kid2 = this[p2+2];
-    }
-    return r; 
-}
-
-Array.prototype.idxPt=function(f){
-//special function to run through open and closed arrays and return the index of points. Since we're searching on the p property of points, the regular indexOf may not sometimes work 
-    for(var i=0,l=this.length;i<l;i++){
-        if(this[i].f==f){
-            return i; 
-        }
-    }
-    return -1; 
-}
-
-//tests 
-var h=[{f:10}]; 
+<script src="arrays.js"></script> 
+<script>//tests 
+var h=[{f:10,idx:0}]; 
 //add item
-h.pushHeap({f:17}); 
-h.pushHeap({f:20}); 
-h.pushHeap({f:30}); 
-h.pushHeap({f:38}); 
-h.pushHeap({f:30}); 
-h.pushHeap({f:24}); 
-h.pushHeap({f:34}); 
+h.pushHeap({f:17,i:null}); 
+h.pushHeap({f:20,i:null}); 
+h.pushHeap({f:30,i:null}); 
+h.pushHeap({f:38,i:null}); 
+h.pushHeap({f:30,i:null}); 
+h.pushHeap({f:24,i:null}); 
+h.pushHeap({f:34,i:null}); 
 //remove item
 //h.shifHeap();
-
-</script> 
+</script>
 
 <body>
 

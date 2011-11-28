@@ -1,326 +1,42 @@
+<!DOCTYPE html>
 <html>
+<head>
+<title>Path finding on an elevation model</title>
+<script src="arrays.js" type="text/javascript"></script> 
+<script src="path.js" type="text/javascript"></script> 
+</head>
 
 <body>
-<html>
-<script>
-//from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
-document.addEventListener("DOMContentLoaded", init, false);
-var context,canvas,startPt,endPt,imageData; 
-var width=341,height=487;
-//var width=136,height=192;
-//var width=68,height=96;
-
-
-function init(){
-    canvas = document.getElementById("myCanvas");
-    context = canvas.getContext('2d');
-    
-    var img = new Image();
-    img.onload = function(){
-        context.drawImage(img,0,0,width,height);
-        imageData = context.getImageData(0,0,width,height).data;
-     }
-    //set the source of the image after you define the onload event 
-    img.src = '28497307.png';
-     
-    //non IE 
-    canvas.addEventListener("mousedown", setEndPoints, false);
-    canvas.addEventListener("mousemove", showCoordinates, false);
-}
-
-
-function getPosition(event){
-    //function called when user clicks on canvas
-    var x,y,v;
-    if (event.x != undefined && event.y != undefined){
-        x = event.x;
-        y = event.y;
-    }else{
-    // Firefox method to get the position
-      x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-      y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    }
-    x -= canvas.offsetLeft;
-    y -= canvas.offsetTop;
-    if(x>width || y>height){
-        //do nothing if the click is outside the canvas
-        return; 
-    }
-    v = imageData[4*(x+width*y)];
-    return {x:x,y:y,v:v};
-}
-
-function showCoordinates(event){
-    //function called when user moves mouse over canvas
-    var pt= getPosition(event);
-    setHtml("posDiv","x "+pt.x + " y "+ pt.y + " v "+pt.v); 
-}
-  
-function setEndPoints(event){
-    //function called when user clicks on canvas
-    var pt= getPosition(event);   
-    var p = pt.x+"-"+pt.y;
-    if(!startPt){
-        //define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
-        startPt ={x:pt.x,y:pt.y,v:pt.v,p:p,g:0,f:0,par:null,o:1};
-       setHtml("startDiv","x "+pt.x + " y "+ pt.y + " v "+pt.v); 
-    }else{
-       setHtml("endDiv","x "+pt.x + " y "+ pt.y + " v "+pt.v);   
-        endPt ={x:pt.x,y:pt.y,v:pt.v,p:p}
-    }
-}
-
-function setHtml(div,html){
-    document.getElementById(div).innerHTML = html; 
-}
-
-
-//description of algorithm from http://www.policyalmanac.org/games/binaryHeaps.htm
-Array.prototype.pushHeap = function(v){
-    //add item to the end 
-    var l = this.push(v);
-    var h= Math.floor(l/2);
-    var p = this[h-1];
-    var vpos = l-1; 
-    
-    //repeat while v's f-score is lower than the parent's
-    while(p && v.f<p.f ){
-        //swap the parent with v
-        this[h-1] = v;
-        this[vpos] = p; 
-        vpos=h-1; 
-        h=Math.floor(h/2);
-        p=this[h-1];
-    }
-    return l; 
-}
-
-Array.prototype.shiftHeap = function(v){
-    if(this.length<3){
-        //regular shift if there are 0,1 or 2 items in array
-       return this.shift(); 
-    }
-    //remove the first element
-    var r = this.shift();
-    //put the last element first 
-    this.unshift(this.pop()); 
-    var pos = 0,p2;
-    //the first two kids are at index 1 and 2 
-    var kid1 = this[1]; 
-    var kid2 = this[2]; 
-    var v= this[pos]; 
-    
-    //repeat while parent's f-score is greater than either of its two children 
-    while((kid1 && v.f>kid1.f) || (kid2 && v.f>kid2.f)){
-        //swap it with the lowest of the two
-        if(!kid2 || kid1.f<=kid2.f){
-            //if kid 2 is undefined, swap parent with kid1 
-            this[pos] = kid1; 
-            pos = pos*2 +1;
-        }else{
-            this[pos] = kid2; 
-            pos = pos*2 +2;
-        }
-        this[pos]=v; 
-        p2 = pos*2;
-        kid1 = this[p2+1];
-        kid2 = this[p2+2];
-    }
-    return r; 
-}
-
-Array.prototype.updateHeap =  function(idx){
-    //when the score of an item changes, it needs to be compared to its parent again to see if it needs to move
-    //the parent in a 1-based index is floor(x/2).  but in a 0-based index it's ceil(x/2)-1
-    var h= Math.ceil(idx/2)-1;
-    var p = this[h];
-    var v = this[idx];
-    var vpos =idx; 
-    //repeat while v's f-score is lower than the parent's
-    while(p && v.f<p.f ){
-        //swap the parent with v
-        this[h] = v;
-        this[vpos] = p;
-        vpos =h; 
-        h=Math.ceil(h/2)-1;
-        p=this[h];
-    } 
-}
-
-Array.prototype.idxPt=function(a){
-//special function to run through open list and return the index of a point. This happens when the f-score of a point in the open list has changed. 
-    for(var i=0,l=this.length;i<l;i++){
-        if(this[i].p==a.p){
-            return i; 
-        }
-    }
-    return -1; 
-}
-
-function checkInputs(){
-  if(!startPt){
-        alert("Click elevation model to set start point"); 
-        return; 
-    }
-    if(!endPt){
-        alert("Click elevation model to set end point"); 
-        return; 
-    }
-    setHtml("pathDiv"," ... computing ... ");
-    var t= setTimeout(runAlgo,100); 
-}
-
-
-//the open list, and the low point.  e contains everything, but mostly needed for looking up if items are on the open or closed list, as that is too time consuming to do with large arrays.  
-var o=[],low,e={}; 
-
-function runAlgo(){
-    //add start point to the open list.  regular push is ok since there's just one item 
-    var idx= o.push(startPt);
-    e[startPt.p]=startPt;
-    //store the index of the point in the open list so we don't have to look it up when needed
-    e[startPt.p][idx] = idx-1; 
-    console.log("running algo"); 
-    //iterate through open list until the end point is in the closed list 
-     while(!ptOpenOrClosed(endPt,0)){
-   //for(var i=0; i<70; i++){
-        iterateOpen();
-    }
-    console.log("done.");
-    drawPath(); 
-    //reset the start and end points 
-    startPt = null;
-    endPt = null; 
-    //remove event for mousedown
-    canvas.removeEventListener("mousedown", setEndPoints,false);
-}
-
-function ptOpenOrClosed(a,b){
-    //return true is point is in 'e' and if the first item in its array is a 0 (for closed) 
-    if(e[a.p]){
-        if(e[a.p].o==b){
-            return true;
-        }else{
-            return false; 
-        }
-    }else{
-        return false; 
-    }
-}
-
-function iterateOpen(){
-    //pick the point with the lowest f-score (ie the first one, since we're using a binary heap to keep the open list quasi-sorted) and move point to the closed list
-    
-    low = o.shiftHeap();
-    //add it to closed list, by changing 'o' property to 0 
-    e[low.p].o=0;
- 
-    //get the neighbors 
-    var neighs = getNeighbors(low);
-     
-    for (var i=0,l=neighs.length;i<l;i++){
-        var n= neighs[i];
-        //calculate the g score for the neighbor 
-        var g = n.g+low.g+n.d;
-        
-        if(ptOpenOrClosed(n,0)){
-        	//if it's in the closed list, ignore it
-            continue; 
-        }
-        
-        if(ptOpenOrClosed(n,1)){
-            //if neighbor is in open list already check score to see if this approach is better
-            var en = e[n.p];
-            if(en.g>g){
-                //update the score to approaching it from this pt 
-               en.g= g;
-               en.f= g+n.h;
-               //update the parent to this
-               en.par= low.p;
-               //we changed the f-score, so reorder the heap 
-               o.updateHeap(o.idxPt(en));
-            }
-        }else{
-            //if not in open list then add it to the open list 
-            //make the parent the current point 
-            n['par'] = low.p;
-            n['g']= g;
-            n['o']= 1;
-            n['f']= g+n.h;
-            e[n.p]=n;
-            o.pushHeap(n); 
-        }
-    }
-}
-
-
-
-function getNeighbors(p){
-//returns an array of all the neighbors.  each point is an object with properties
-// p: 'x-y'  the written form of the point
-// x: x value
-// y: y value 
-// d: the absolute difference in pixel values of moving from p to n
-// g: if the point is to the right, left, up or down then a 2.  if diagonal then a 3 
-// h: the heuristic, the manhattan distance to get from this point to the endPt
-// f: the sum of g and h 
-
-    var neighs = [];
-    //var curVal = context.getImageData(p.x,p.y,1,1).data[0]; 
-    //if you put imageData instead of imageData.data, you get a cool looking error 
-    var curVal = imageData[4*(p.x+width*p.y)];
-    for (var i=-1;i<2;i++){
-    	//stay within the x bounds of the image 
-        if(p.x+i>=0 && p.x+i<width){
-	        for (var j=-1;j<2;j++){
-	        	//stay within the y bounds of the image, and ignore when loop gives same point as p 
-	            if(p.y+j>=0 && p.y+j<height && (j || i)){
-	                var pi = p.x+i; 
-	                var pj = p.y+j; 
-	                //var neighVal = context.getImageData(pi,pj,1,1).data[0];
-	                var neighVal = imageData[4*(pi+width*pj)];
-	                	var n ={
-	                        p:pi+'-'+pj,
-	                        x:pi,
-	                        y:pj,
-	                        d:Math.abs(curVal-neighVal)*5,
-	                        g:(pi!=p.x && pj!=p.y)?3:2,
-	                        h:Math.abs(endPt.x-pi)+Math.abs(endPt.y-pj)
-	                    };
-	                neighs.push(n); 
-	           }	   
-	        }
-       } 
-    }
-    return neighs; 
-}
-
-
-function drawPath(){
-	var par =e[endPt.p].par;
-    context.strokeStyle = "red"; 
-    context.beginPath();
-    context.moveTo(endPt.x, endPt.y);
-	var ct=0;
-    while(e[par]){
-        ct++; 
-        context.lineTo(e[par].x, e[par].y);
-        par =e[par].par; 
-	}
-    context.stroke();
-    setHtml("pathDiv","points "+ct );
-}
-</script> 
-
-<body>
-<canvas id="myCanvas" width="341" height="487" style="float:left"></canvas>
+<canvas id="myCanvas" width="341" height="487" style="float:left">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
 <div style="float:left; padding-left:10px;">
     <b>Start:</b> <span id="startDiv">Click elevation model to set start point</span><br>
     <b>End:</b> <span id="endDiv">Click elevation model to set end point</span><br>
     <b>Path:</b> <span id="pathDiv"><a href='javascript:checkInputs()'>Click here to find path</a></span>
-    
 </div>
 <div style="clear:both">Position: <span id="posDiv"></span></div>
+<p>About</p>
+<ul><li>The purpose of this aplication is to find the easiest way to hike from a starting point to an ending point over a given terrain.</li>
+<li>Moving from one pixel to a neighboring pixel E,N,S or W costs 2 points.</li>
+<li>Moving to a neighbor NW,NE,SW,or SE costs 3 points.</li>
+<li>The absolute difference in pixel values, which represent elevation, is multiplied by 5.</li>
+</ul>
+<p>Notes</p>
+<ul>
+<li>Works fastest in Chrome. Will not even load in IE7 or earlier.</li>
+<li>Image from the USGS 1/3-Arc Second National Elevation Dataset. And we're losing a lot of detail going from a TIFF to a PNG. </li>
+<li>Use a binary heap to quickly get the item with the lowest f-score.  This is a tremenduous improvement over looping over arrays.</li> 
+<li>Use objects to store lists for quick lookup.  Again, much faster than looping over arrays. </li>
+<li>Use a stored image data instead of getImageData</li>
+<li>Modify the binary heap methods to track item indexes whenver items are switched around.  This keeps us from using an expensive array lookup when items need to be updated</li> 
+<li>Use the Firebug profiler to see which functions are taking too long, and focus improvements on those</li>
+</ul>
+<p>Resources</p>
+<ul>
+<li>Description of the A* algorithm from <a href='http://www.policyalmanac.org/games/aStarTutorial.htm'>http://www.policyalmanac.org/games/aStarTutorial.htm</a></li>
+<li>Description of binary heaps from <a href='http://www.policyalmanac.org/games/binaryHeaps.htm'>http://www.policyalmanac.org/games/binaryHeaps.htm</a></li>
+<li>Contact author: Florin Alexandrescu (geotangents at gmail) </li>
+</ul>
+
 </body>
 
 </html>
