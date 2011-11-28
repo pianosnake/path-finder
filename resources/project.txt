@@ -1,0 +1,25 @@
+http://www.ucgis.org/summer2009/studentpapers/pingel_thomas.pdf
+
+Used the algo to predict historical path native americans took.  But people make errors in estimating slopes and distances, leading to sub-optimal choices. 
+
+Use it to predict an east-to-west route across the continent. Find ways to measure discrepancies between predicted trails and actual trails.   Find missing persons with it by predicting the likely route they would take. 
+
+Differences in path based on how pixels are latticed to make a network.  Orthogonal, diagonal, or knight (L-shapes). 
+
+Going downhill on steep slopes is more dangerous than goin uphill on the same slope
+
+Roads on mountain passes rarely exceed 5 degrees (9%) Rails are even more constricted to 1.9 degrees (3.3 %). 
+
+Does a switchback exist on a virgin slope? Or is it like a tunnel or a bridge?
+
+
+
+http://stephenbodio.blogspot.com/2008/03/prehistoric-trails.html
+Showed that the models of  Least Cost DEM were a poor predictor of prehistoric routes in the dessert of California. 
+
+
+
+Wales article 
+http://www.geog.cam.ac.uk/people/rees/
+
+Cost formula (Naismith's Rule).  Metabolic cost of walking different slopes.  

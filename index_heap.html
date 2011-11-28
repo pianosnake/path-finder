@@ -30,10 +30,18 @@
 <li>Modify the binary heap methods to track item indexes whenver items are switched around.  This keeps us from using an expensive array lookup when items need to be updated</li> 
 <li>Use the Firebug profiler to see which functions are taking too long, and focus improvements on those</li>
 </ul>
+<p>Questions</p>
+<ul>
+<li>If you start in different points in neighborhood A and end in any point in neighborhood B, it looks like a trail would be used for all those hikes.  What defines these neighborhoods? How do you find their boundaries?</li>
+<li>Running the algorithm on the same picture scaled down, is much faster and the results are remarkably similar.  How much are we losing by using lower resolution data?  Is running this on the original TIFF going to give the same results as running on the reduced resolution PNG?</li>
+<li>Also, the heuristic is pretty important because it is our estimate of the remaining distance.  Can the heuristic be improved by using the results from a lower resolution run?</li>
+<li>Can we predict the location of existing trails? W.G. Rees isn't too hopeful in "<a href="http://www.sciencedirect.com/science/article/pii/S0098300404000226">Least-cost paths in mountainous terrain</a>" Computers &amp; Geosciences 30 (2004) 203-209.   </li> 
+<li>Thomas Pingel in "<a href="http://www.ucgis.org/summer2009/studentpapers/pingel_thomas.pdf">Modeling slope as a contributor to route selection in mountainous areas</a>" notes that people overestimate slopes and are prone to making sub-optimal decisions.  Also going downhill on a steep slope is harder than going uphill the same way.  How do you account for that in the prediction? </li>
+</ul>
 <p>Resources</p>
 <ul>
-<li>Description of the A* algorithm from <a href='http://www.policyalmanac.org/games/aStarTutorial.htm'>http://www.policyalmanac.org/games/aStarTutorial.htm</a></li>
-<li>Description of binary heaps from <a href='http://www.policyalmanac.org/games/binaryHeaps.htm'>http://www.policyalmanac.org/games/binaryHeaps.htm</a></li>
+<li>Patrick Lester.  "<a href='http://www.policyalmanac.org/games/aStarTutorial.htm'>A* Pathfinding for Beginners</a>."</li>
+<li>Patrick Lester. "<a href='http://www.policyalmanac.org/games/binaryHeaps.htm'>Using Binary Heaps in A* Pathfinding</a>."</li>
 <li>Contact author: Florin Alexandrescu (geotangents at gmail) </li>
 </ul>
 
