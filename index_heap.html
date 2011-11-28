@@ -6,8 +6,8 @@
 //from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
 document.addEventListener("DOMContentLoaded", init, false);
 var context,canvas,startPt,endPt; 
-//var width=341,height=487;
-var width=68,height=96;
+var width=341,height=487;
+//var width=68,height=96;
 
 
 function init(){
@@ -51,7 +51,7 @@ function getPosition(event){
     
         if(!startPt){
         	//define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
-            startPt ={x:x,y:y,v:v,p:p,g:0,f:0,par:null};
+            startPt ={x:x,y:y,v:v,p:p,g:0,f:0,par:null,o:1};
            setHtml("startDiv","x "+x + " y "+ y + " v "+v); 
         }else{
            setHtml("endDiv","x "+x + " y "+ y + " v "+v);   
@@ -69,8 +69,7 @@ function setHtml(div,html){
 //description of algorithm from http://www.policyalmanac.org/games/binaryHeaps.htm
 Array.prototype.pushHeap = function(v){
     //add item to the end 
-    this.push(v);
-    var l = this.length; 
+    var l = this.push(v);
     var h= Math.floor(l/2);
     var p = this[h-1];
     var vpos = l-1; 
@@ -84,16 +83,16 @@ Array.prototype.pushHeap = function(v){
         h=Math.floor(h/2);
         p=this[h-1];
     }
+    return l; 
 }
 
 Array.prototype.shiftHeap = function(v){
     if(this.length<3){
         //regular shift if there are 0,1 or 2 items in array
-       this.shift(); 
-        return;
+       return this.shift(); 
     }
     //remove the first element
-    this.shift();
+    var r = this.shift();
     //put the last element first 
     this.unshift(this.pop()); 
     var pos = 0,p2;
@@ -118,48 +117,79 @@ Array.prototype.shiftHeap = function(v){
         kid1 = this[p2+1];
         kid2 = this[p2+2];
     }
+    return r; 
 }
 
-Array.prototype.idxPt=function(n){
-//special function to run through open and closed arrays and return the index of points. Since we're searching on the p property of points, the regular indexOf may not sometimes work 
+Array.prototype.updateHeap =  function(idx){
+    //when the score of an item changes, it needs to be compared to its parent again to see if it needs to move
+    //the parent in a 1-based index is floor(x/2).  but in a 0-based index it's ceil(x/2)-1
+    var h= Math.ceil(idx/2)-1;
+    var p = this[h];
+    var v = this[idx];
+    var vpos =idx; 
+    //repeat while v's f-score is lower than the parent's
+    while(p && v.f<p.f ){
+        //swap the parent with v
+        this[h] = v;
+        this[vpos] = p;
+        vpos =h; 
+        h=Math.ceil(h/2)-1;
+        p=this[h];
+    } 
+}
+
+Array.prototype.idxPt=function(a){
+//special function to run through open list and return the index of a point. This happens when the f-score of a point in the open list has changed. 
     for(var i=0,l=this.length;i<l;i++){
-        if(this[i].x===n.x && this[i].y===n.y){
+        if(this[i].p==a.p){
             return i; 
         }
     }
     return -1; 
 }
 
-//the open and closed lists, and the low point 
-var o=[],c=[],low; 
+
+//the open list, and the low point.  e contains everything, but mostly needed for looking up if items are on the open or closed list, as that is too time consuming to do with large arrays.  
+var o=[],low,e={}; 
 
 function runAlgo(){
     //add start point to the open list.  regular push is ok since there's just one item 
     o.push(startPt);
-    
-    console.log("running algo",o); 
-       
+    e[startPt.p]=startPt;
+    console.log("running algo"); 
+   
     //iterate through open list until the end point is in the closed list 
-    while(c.idxPt(endPt)===-1){
-   //for(var i=0; i<50; i++){
+     while(!ptOpenOrClosed(endPt,0)){
+   //for(var i=0; i<7000; i++){
         iterateOpen();
     }
     console.log("done.");
     drawPath(); 
     //reset the start and end points 
-   // startPt = null;
-    //endPt = null; 
+    startPt = null;
+    endPt = null; 
 }
 
+function ptOpenOrClosed(a,b){
+    //return true is point is in 'e' and if the first item in its array is a 0 (for closed) 
+    if(e[a.p]){
+        if(e[a.p].o==b){
+            return true;
+        }else{
+            return false; 
+        }
+    }else{
+        return false; 
+    }
+}
 
 function iterateOpen(){
     //pick the point with the lowest f-score (ie the first one, since we're using a binary heap to keep the open list quasi-sorted) and move point to the closed list
     
-    low = o[0];
-    c.push(low);
-    o.shiftHeap();
+    low = o.shiftHeap();
+    //add it to closed list, by changing 'o' property to 0 
+    e[low.p].o=0;
  
-    
     //get the neighbors 
     var neighs = getNeighbors(low);
      
@@ -168,26 +198,31 @@ function iterateOpen(){
         //calculate the g score for the neighbor 
         var g = n.g+low.g+n.d;
         
-        if(c.idxPt(n)>-1){
+        if(ptOpenOrClosed(n,0)){
         	//if it's in the closed list, ignore it
             continue; 
         }
-        var oIdx =o.idxPt(n); 
-        if(oIdx>-1){
+        
+        if(ptOpenOrClosed(n,1)){
             //if neighbor is in open list already check score to see if this approach is better
-            var en = o[oIdx];
+            var en = e[n.p];
             if(en.g>g){
                 //update the score to approaching it from this pt 
                en.g= g;
+               en.f= g+n.h;
                //update the parent to this
                en.par= low.p;
+               //we changed the f-score, so reorder the heap 
+               o.updateHeap(o.idxPt(en));
             }
         }else{
             //if not in open list then add it to the open list 
             //make the parent the current point 
             n['par'] = low.p;
             n['g']= g;
+            n['o']= 1;
             n['f']= g+n.h;
+            e[n.p]=n;
             o.pushHeap(n); 
         }
     }
@@ -234,21 +269,18 @@ function getNeighbors(p){
 
 
 function drawPath(){
-    var idx = c.idxPt(endPt); 
-    var par =c[idx].par;
-    var ct=0;
+	var par =e[endPt.p].par;
     context.strokeStyle = "red"; 
     context.beginPath();
     context.moveTo(endPt.x, endPt.y);
-	
-    while(par){
+	var ct=0;
+    while(e[par]){
         ct++; 
-        idx = c.idxPt({p:par});
-        context.lineTo(c[idx].x, c[idx].y);
-        par =c[idx].par; 
+        context.lineTo(e[par].x, e[par].y);
+        par =e[par].par; 
 	}
     context.stroke();
-    setHtml("pathDiv","points "+ct + " difficulty "+c[c.idxPt(endPt)].g );
+    setHtml("pathDiv","points "+ct + " difficulty "+e[endPt.p].g );
 }
 </script> 
 

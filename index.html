@@ -50,7 +50,6 @@ function getPosition(event){
         }else{
            setHtml("endDiv","x "+x + " y "+ y + " v "+v);   
             endPt ={x:x,y:y,v:v,p:p}
-            changeColor(x,y);
         }
         
         console.log("x:",x,"y:",y," ",p);
@@ -94,11 +93,12 @@ function ptOpenOrClosed(a,b){
         return false; 
     }
 }
+var hm=0; 
 function iterateOpen(){
     //pick the point with the lowest score and move point to the closed list
     pickLowestPoint(); 
     e[low.p].o=0;
-    
+    hm++; 
     //get the neighbors 
     var neighs = getNeighbors(low);
      
@@ -117,6 +117,7 @@ function iterateOpen(){
             if(en.g>g){
                 //update the score to approaching it from this pt 
                en.g= g;
+               en.f=g+n.h; 
                //update the parent to this
                en.par= low.p;
             }
@@ -185,11 +186,6 @@ function getNeighbors(p){
     return neighs; 
 }
 
-
-
-function changeColor(x, y) {
-    
-}
 
 
 function drawPath(){
