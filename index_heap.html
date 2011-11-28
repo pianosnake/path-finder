@@ -157,7 +157,18 @@ Array.prototype.idxPt=function(a){
     return -1; 
 }
 
-
+function checkInputs(){
+  if(!startPt){
+        alert("Click elevation model to set start point"); 
+        return; 
+    }
+    if(!endPt){
+        alert("Click elevation model to set end point"); 
+        return; 
+    }
+    setHtml("pathDiv"," ... computing ... ");
+    var t= setTimeout(runAlgo,100); 
+}
 //the open list, and the low point.  e contains everything, but mostly needed for looking up if items are on the open or closed list, as that is too time consuming to do with large arrays.  
 var o=[],low,e={}; 
 
@@ -166,7 +177,6 @@ function runAlgo(){
     o.push(startPt);
     e[startPt.p]=startPt;
     console.log("running algo"); 
-   
     //iterate through open list until the end point is in the closed list 
      while(!ptOpenOrClosed(endPt,0)){
    //for(var i=0; i<70; i++){
@@ -177,6 +187,8 @@ function runAlgo(){
     //reset the start and end points 
     startPt = null;
     endPt = null; 
+    //remove event for mousedown
+    canvas.removeEventListener("mousedown", setEndPoints,false);
 }
 
 function ptOpenOrClosed(a,b){
@@ -292,17 +304,17 @@ function drawPath(){
         par =e[par].par; 
 	}
     context.stroke();
-    setHtml("pathDiv","points "+ct + " difficulty "+e[endPt.p].g );
+    setHtml("pathDiv","points "+ct );
 }
 </script> 
 
 <body>
 <canvas id="myCanvas" width="341" height="487" style="float:left"></canvas>
-<div style="float:left; padding-left:10px;">Click elevation model twice to set start and end points<br>
-    Start: <span id="startDiv"></span><br>
-    End: <span id="endDiv"></span><br>
-    Path: <span id="pathDiv"></span>
-    <p><a href='javascript:runAlgo()'>Find path</a></p>
+<div style="float:left; padding-left:10px;">
+    <b>Start:</b> <span id="startDiv">Click elevation model to set start point</span><br>
+    <b>End:</b> <span id="endDiv">Click elevation model to set end point</span><br>
+    <b>Path:</b> <span id="pathDiv"><a href='javascript:checkInputs()'>Click here to find path</a></span>
+    
 </div>
 <div style="clear:both">Position: <span id="posDiv"></span></div>
 </body>
