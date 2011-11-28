@@ -169,13 +169,17 @@ function checkInputs(){
     setHtml("pathDiv"," ... computing ... ");
     var t= setTimeout(runAlgo,100); 
 }
+
+
 //the open list, and the low point.  e contains everything, but mostly needed for looking up if items are on the open or closed list, as that is too time consuming to do with large arrays.  
 var o=[],low,e={}; 
 
 function runAlgo(){
     //add start point to the open list.  regular push is ok since there's just one item 
-    o.push(startPt);
+    var idx= o.push(startPt);
     e[startPt.p]=startPt;
+    //store the index of the point in the open list so we don't have to look it up when needed
+    e[startPt.p][idx] = idx-1; 
     console.log("running algo"); 
     //iterate through open list until the end point is in the closed list 
      while(!ptOpenOrClosed(endPt,0)){
