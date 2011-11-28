@@ -1,13 +1,13 @@
 //modify the Array object to have support operations on binary heaps
 //description of algorithm from http://www.policyalmanac.org/games/binaryHeaps.htm
 Array.prototype.pushHeap =  function(v){
-    //add item to the end
-    var l = this.push(v); 
+    //add item to the end. this is supposedly faster than pushing http://dev.opera.com/articles/view/efficient-javascript/?page=all
+    this[this.length]=v; 
     //update the index of v to show it's at the end of the array 
-    this[l-1].i=l-1; 
-    var h= Math.floor(l/2);
+    this[this.length-1].i=this.length-1; 
+    var h= Math.floor(this.length/2);
     var p = this[h-1];
-    var vpos = l-1; 
+    var vpos = this.length-1; 
     
     //repeat while v's f-score is lower than the parent's
     while(p && v.f<p.f ){
@@ -20,7 +20,7 @@ Array.prototype.pushHeap =  function(v){
         h=Math.floor(h/2);
         p=this[h-1];
     }
-    return l; 
+    return this.length; 
 }
 
 Array.prototype.updateHeap =  function(idx){

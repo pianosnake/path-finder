@@ -208,7 +208,8 @@ function getNeighbors(p){
 		//stay within the bounds of the image
         if(nx>=0 && nx<width && ny>=0 && ny<height){
 			var nv= imageData[4*(nx+width*ny)];
-			ns.push({
+			//this is supposedly faster than pushing http://dev.opera.com/articles/view/efficient-javascript/?page=all
+			ns[ns.length]={
 				p:nx+'-'+ny,
 				x:nx,
 				y:ny,
@@ -216,7 +217,7 @@ function getNeighbors(p){
 				d:Math.abs(p.v-nv)*5,
 				g:nba[a][2],
 				h:Math.abs(endPt.x-nx)+Math.abs(endPt.y-ny)
-			}); 
+			}; 
        } 
     }
     return ns; 
