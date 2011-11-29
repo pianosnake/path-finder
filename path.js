@@ -135,8 +135,8 @@ function iterateOpen(){
  
     //get the neighbors 
     var ns = getNeighbors(low);
-     
-    for (var i=0,l=ns.length;i<l;i++){
+     var i = ns.length; 
+    while (i--){
         var n= ns[i];
         //calculate the g score for the neighbor 
         var g = n.g+low.g+n.d;
@@ -202,7 +202,8 @@ function getNeighbors(p){
 // h: the heuristic, the manhattan distance to get from this point to the endPt
 
     var ns = [];
-    for (var a=0;a<8;a++){
+    var a =8; 
+    while (a--){
 		var nx = p.x+nba[a][0], 
 			ny = p.y+nba[a][1]; 
 		//stay within the bounds of the image
@@ -225,7 +226,7 @@ function getNeighbors(p){
 
 
 function drawPath(){
-	var par =e[endPt.p].par
+	var par =e[endPt.p].par,
 		ct =0;
     context.strokeStyle = "red"; 
     context.beginPath();
