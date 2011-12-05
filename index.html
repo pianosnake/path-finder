@@ -1,217 +1,73 @@
+<!DOCTYPE html>
 <html>
-
-<body>
-<html>
+<head>
+<title>Path finding on an elevation model</title>
+<script src="path.js" type="text/javascript"></script> 
 <script>
-//from http://miloq.blogspot.com/2011/05/coordinates-mouse-click-canvas.html
-document.addEventListener("DOMContentLoaded", init, false);
-var context,canvas,startPt,endPt; 
-//var width=341,height=487;
-var width=68,height=96;
-
-
-function init(){
-    canvas = document.getElementById("myCanvas");
-    context = canvas.getContext('2d');
-    
-    var img = new Image();
-    img.onload = function(){
-        context.drawImage(img,0,0,width,height);
-     }
-    //set the source of the image after you define the onload event 
-    img.src = '28497307.png'; 
-    canvas.addEventListener("mousedown", getPosition, false);
-}
-
-  
-function getPosition(event){
-    //function called when user clicks on canvas
-    
-    var x,y;
-    if (event.x != undefined && event.y != undefined){
-        x = event.x;
-        y = event.y;
-    }else{
-    // Firefox method to get the position
-          x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-          y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-    }
-
-    x -= canvas.offsetLeft;
-    y -= canvas.offsetTop;
-    //pixel value
-    v = context.getImageData(x,y,1,1).data[0];
-    p = x+"-"+y; 
-    
-        if(!startPt){
-        	//define the start point.   g is the score to get to itself, its 0 in the beginning, f is a high score as a default start  
-            startPt ={x:x,y:y,v:v,p:p,g:0,f:0,par:null,o:1};
-           setHtml("startDiv","x "+x + " y "+ y + " v "+v); 
-        }else{
-           setHtml("endDiv","x "+x + " y "+ y + " v "+v);   
-            endPt ={x:x,y:y,v:v,p:p}
-        }
-        
-        console.log("x:",x,"y:",y," ",p);
-}
-function setHtml(div,html){
-    document.getElementById(div).innerHTML = html; 
-}
-
-//the 'everything' object holds the open/closed list, parents, g and f scores 
-//key is the a point named 'x-y' and value is an array [open/closed,parent,fscore,gscore]
-var e={}; 
-//lowest cost point 
-var low; 
-
-
-function runAlgo(){
-    //add start point to the open list 
-    e[startPt.p]=startPt;
-    
-    console.log("running algo"); 
-       
-    //iterate through open list until the end point is in the closed list 
-    while(!ptOpenOrClosed(endPt,0)){
-   // for(var i=0; i<50; i++){
-        iterateOpen();
-    }
-    console.log("done.");
-    drawPath(); 
-    startPt = null;
-    endPt = null; 
-}
-function ptOpenOrClosed(a,b){
-    //return true is point is in 'e' and if the first item in its array is a 0 (for closed) 
-    if(e[a.p]){
-        if(e[a.p].o==b){
-            return true;
-        }else{
-            return false; 
-        }
-    }else{
-        return false; 
+window.onload = function(){
+    PATH.init({
+        canvas: "myCanvas", 
+        imgSrc:"deer_ridge.png",
+        posDiv:"posDiv",
+        startDiv:"startDiv",
+        pathDiv:"pathDiv",
+        endDiv:"endDiv",
+        draw:true,
+        callback:handleResults
+    });
+    document.getElementById("removePathsBtn").addEventListener("click",PATH.resetCanvas,false); 
+    document.getElementById("findPathBtn").addEventListener("click",PATH.start,false);
+    function handleResults(r){
+        //console.log ('use the results for other purposes ...',r ); 
     }
 }
-var hm=0; 
-function iterateOpen(){
-    //pick the point with the lowest score and move point to the closed list
-    pickLowestPoint(); 
-    e[low.p].o=0;
-    hm++; 
-    //get the neighbors 
-    var neighs = getNeighbors(low);
-     
-    for (var i=0,l=neighs.length;i<l;i++){
-        var n= neighs[i]; 
-        var g = n.g+low.g+n.d;
-        
-        if(ptOpenOrClosed(n,0)){
-        	//if it's in the closed list, ignore it
-            continue; 
-        }
-        
-        if(ptOpenOrClosed(n,1)){
-            //if neighbor is in open list already check score to see if this approach is better
-            var en = e[n.p];
-            if(en.g>g){
-                //update the score to approaching it from this pt 
-               en.g= g;
-               en.f=g+n.h; 
-               //update the parent to this
-               en.par= low.p;
-            }
-        }else{
-            //if not in open list then add it to the open list 
-            //make the parent the current point 
-            e[n.p]=n;
-            e[n.p]['par'] = low.p;
-            e[n.p]['o']= 1;
-            e[n.p]['g']= g;
-            e[n.p]['f']= g+n.h;           
-        }
-    }
-}
-function pickLowestPoint(){
-	var f = 10000; 
-	for (var i in e){
-		if(e[i].o && e[i].f <f ){
-			f=e[i].f; 
-			low = e[i];
-		}	
-	}
-}
-	
+</script>
 
-function isThisLowest(n){
-    if(n.f<low.f){
-        low = n; 
-    }
-}
-
-function getNeighbors(p){
-//returns an array of all the neighbors.  each point is an object with properties
-// p: 'x-y'  the written form of the point
-// x: x value
-// y: y value 
-// d: the absolute difference in pixel values of moving from p to n
-// g: if the point is to the right, left, up or down then a 2.  if diagonal then a 3 
-// h: the heuristic, the manhattan distance to get from this point to the endPt
-// f: the sum of g and h 
-
-    var neighs = [];
-    var curVal = context.getImageData(p.x,p.y,1,1).data[0]; 
-    for (var i=-1;i<2;i++){
-    	//stay within the x bounds of the image 
-        if(p.x+i>=0 && p.x+i<width){
-	        for (var j=-1;j<2;j++){
-	        	//stay within the y bounds of the image, and ignore if when the neighbor given the same point 
-	            if(p.y+j>=0 && p.y+j<height && (j || i)){
-	                var pi = p.x+i; 
-	                var pj = p.y+j; 
-	                var neighVal = context.getImageData(pi,pj,1,1).data[0];
-	                	var n ={
-	                        p:pi+'-'+pj,
-	                        x:pi,
-	                        y:pj,
-	                        d:Math.abs(curVal-neighVal)*5,
-	                        g:(pi!=p.x && pj!=p.y)?3:2,
-	                        h:Math.abs(endPt.x-pi)+Math.abs(endPt.y-pj)
-	                    };
-	                neighs.push(n); 
-	           }	   
-	        }
-       } 
-    }
-    return neighs; 
-}
-
-
-
-function drawPath(){
-	var par =e[endPt.p].par;
-    context.strokeStyle = "red"; 
-    context.beginPath();
-    context.moveTo(endPt.x, endPt.y);
-	var ct=0;
-    while(e[par]){
-        ct++; 
-        context.lineTo(e[par].x, e[par].y);
-        par =e[par].par; 
-	}
-    context.stroke();
-    setHtml("pathDiv","points "+ct + " difficulty "+e[endPt.p].g );
-}
-</script> 
+</head>
 
 <body>
-<canvas id="myCanvas" width="341" height="487" style="float:left"></canvas>
-<div style="float:left; padding-left:10px;">Click elevation model twice to set start and end points<br>
-    Start: <span id="startDiv"></span><br>
-    End: <span id="endDiv"></span><br>
-    Path: <span id="pathDiv"></span>
-    <p><a href='javascript:runAlgo()'>Find path</a></p>
+<canvas id="myCanvas" width="453" height="373" style="float:left">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
+<div style="float:left; padding-left:10px;">
+    <b>Start:</b> <span id="startDiv">Click elevation model to set start point</span><br>
+    <b>End:</b> <span id="endDiv">Click elevation model to set end point</span><br>
+    <b>Path:</b> <span id="pathDiv"></span><br>
+    <button id="findPathBtn">Find path</button><br>
+    <button id="removePathsBtn">Remove paths</button>
 </div>
+<div style="clear:both">Position: <span id="posDiv"></span></div>
+<p>About</p>
+<ul><li>The purpose of this application is to find the easiest way to hike from a starting point to an ending point over a given terrain.</li>
+<li>Moving from one pixel to a neighboring pixel E,N,S or W costs 2 points.</li>
+<li>Moving to a neighbor NW,NE,SW,or SE costs 3 points.</li>
+<li>The absolute difference in pixel values, which represent elevation, is multiplied by 5.</li>
+</ul>
+<p>Notes</p>
+<ul>
+<li>Works fastest in Chrome. Will not even load in IE7 or earlier.</li>
+<li>Image from the USGS 1/3-Arc Second National Elevation Dataset. And we're losing a lot of detail going from a TIFF to a PNG. This algorithm will work on any image loaded into the canvas element, but the results might be funky when using a color image or any terrain with shaded relief.</li>
+<li>Use a binary heap to quickly get the item with the lowest f-score.  This is a tremendous improvement over looping over arrays.</li> 
+<li>Use objects to store lists for quick lookup.  Again, much faster than looping over arrays. </li>
+<li>Use a stored image data instead of getImageData</li>
+<li>Modify the binary heap methods to track item indexes whenever items are switched around.  This keeps us from using an expensive array lookup when items need to be updated</li> 
+<li>Use the Firebug profiler to see which functions are taking too long, and focus improvements on those</li>
+</ul>
+<p>Questions</p>
+<ul>
+<li>The canvas element throws a security error if the image is loaded from another domain. This limits loading images from web map services. Any way around this?</li>
+<li>If you start in different points in neighborhood A and end in any point in neighborhood B, it looks like a trail would be used for all those hikes.  What defines these neighborhoods? How do you find their boundaries?</li>
+<li>Running the algorithm on the same picture scaled down, is much faster and the results are remarkably similar.  How much are we losing by using lower resolution data?  Is running this on the original TIFF going to give the same results as running on the reduced resolution PNG?</li>
+<li>Also, the heuristic is pretty important because it is our estimate of the remaining distance.  Can the heuristic be improved by using the results from a lower resolution run?</li>
+<li>Can we predict the location of existing trails? W.G. Rees isn't too hopeful in "<a href="http://www.sciencedirect.com/science/article/pii/S0098300404000226">Least-cost paths in mountainous terrain</a>" Computers &amp; Geosciences 30 (2004) 203-209.   </li> 
+<li>Thomas Pingel in "<a href="http://www.ucgis.org/summer2009/studentpapers/pingel_thomas.pdf">Modeling slope as a contributor to route selection in mountainous areas</a>" notes that people overestimate slopes and are prone to making sub-optimal decisions.  Also going downhill on a steep slope is harder than going uphill the same way.  How do you account for that in the prediction? </li>
+</ul>
+<p>Resources</p>
+<ul>
+<li>Patrick Lester.  "<a href='http://www.policyalmanac.org/games/aStarTutorial.htm'>A* Pathfinding for Beginners</a>"</li>
+<li>Patrick Lester. "<a href='http://www.policyalmanac.org/games/binaryHeaps.htm'>Using Binary Heaps in A* Pathfinding</a>"</li>
+<li>Contact author: Florin Alexandrescu (geotangents at gmail) </li>
+</ul>
+
+
 </body>
 
 </html>
