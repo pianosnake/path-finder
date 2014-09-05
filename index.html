@@ -4,6 +4,7 @@
 <title>Path finding on an elevation model</title>
 <script src="binary_heap.js" type="text/javascript"></script> 
 <script src="path.js" type="text/javascript"></script> 
+<link rel="stylesheet" type="text/css" href="style.css">
 <script>
 window.onload = function(){
     PATH.init({
@@ -27,15 +28,15 @@ window.onload = function(){
 </head>
 
 <body>
-<canvas id="myCanvas" width="453" height="373" style="float:left">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
-<div style="float:left; padding-left:10px;">
+<canvas id="myCanvas" width="453" height="373">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
+<div class="directions">
     <b>Start:</b> <span id="startDiv">Click elevation model to set start point</span><br>
     <b>End:</b> <span id="endDiv">Click elevation model to set end point</span><br>
     <b>Path:</b> <span id="pathDiv"></span><br>
     <button id="findPathBtn">Find path</button><br>
     <button id="removePathsBtn">Remove paths</button>
 </div>
-<div style="clear:both">Position: <span id="posDiv"></span></div>
+<div class="position">Position: <span id="posDiv"></span></div>
 <p>About</p>
 <ul><li>The purpose of this application is to find the easiest way to hike from a starting point to an ending point over a given terrain.</li>
 <li>Moving from one pixel to a neighboring pixel E,N,S or W costs 2 points.</li>
