@@ -2,9 +2,9 @@ var PATH = function(){
     var canvas,context,startPt,endPt,image,imageData,width,height,posDiv,endDiv,startDiv,pathDiv,draw,callback,
     //the neighbor addresses 
     nba =[
-    //n,  s,  e,  w
+    //n,  s,  e,  w (cost 2 points)
     [0,-1,2],[0,1,2],[1,0,2],[-1,0,2],
-    //nw,  ne,  sw,  se
+    //nw,  ne,  sw,  se (cost 3 points)
     [-1,-1,3],[1,-1,3],[-1,1,3],[1,1,3]
     ],
     //the open list, and the low point.  e contains all the points in the open or closed list. needed for looking up if items are on the open or closed list, as that is too time consuming to do with large arrays.  
