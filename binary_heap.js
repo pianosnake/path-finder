@@ -1,5 +1,7 @@
 //modify the Array object to have support operations on binary heaps
 //description of algorithm from http://www.policyalmanac.org/games/binaryHeaps.htm
+
+//add item to array
 if(typeof Array.prototype.pushHeap !== "function"){
     Array.prototype.pushHeap =  function(v){
         //add item to the end. this is supposedly faster than pushing http://dev.opera.com/articles/view/efficient-javascript/?page=all
@@ -47,7 +49,7 @@ if(typeof Array.prototype.updateHeap !== "function"){
     }
 }
 
-
+//remove item from front of array
 if(typeof Array.prototype.shiftHeap !== "function"){
     Array.prototype.shiftHeap =  function(){
         if(this.length<3){
