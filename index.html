@@ -1,51 +1,20 @@
 <!DOCTYPE html>
-<html ng-app="path-finder">
+<html ng-app="pathFinder">
 <head>
 <title>Path finding on an elevation model</title>
 <script type="text/javascript" src="bower_components/angular/angular.js"></script>
 <script src="binary_heap.js" type="text/javascript"></script> 
 <script src="path.js" type="text/javascript"></script> 
-<script src="app.js" type="text/javascript"></script> 
+<script src="app.js" type="text/javascript"></script>
+<script src="astar.js" type="text/javascript"></script>
 <link rel="stylesheet" type="text/css" href="style.css">
-<script>
-window.onload = function(){
-    PATH.init({
-        canvas: "myCanvas", 
-        imgSrc:"deer_ridge.png",
-        posDiv:"posDiv",
-        startDiv:"startDiv",
-        pathDiv:"pathDiv",
-        endDiv:"endDiv",
-        draw:true,
-        callback:handleResults
-    });
-    document.getElementById("removePathsBtn").addEventListener("click",PATH.resetCanvas,false); 
-    document.getElementById("findPathBtn").addEventListener("click",PATH.start,false);
-    function handleResults(r){
-        //console.log ('use the results for other purposes ...',r ); 
-    }
-}
-</script>
-
 </head>
 
 <body ng-controller="canvasCtrl">
     Position {{mouseMovePosition | pointDisplay}}<br>
     Start {{startPt | pointDisplay}}<br>
     End {{endPt | pointDisplay}}<br>
-    <path-finder-canvas src="28497307.png" width="341" height="487"></path-finder-canvas>
-<br>
-
-<canvas id="myCanvas" width="453" height="373">Your browser does not support HTML5 canvas.<br>For ideal performance, use Chrome.<br><br></canvas>
-<div class="directions">
-    <b>Start:</b> <span id="startDiv">Click elevation model to set start point</span><br>
-    <b>End:</b> <span id="endDiv">Click elevation model to set end point</span><br>
-    <b>Path:</b> <span id="pathDiv"></span><br>
-    <button id="findPathBtn">Find path</button><br>
-    <button id="removePathsBtn">Remove paths</button>
-</div>
-<div class="position">Position: {{hi}}<span id="posDiv"></span></div>
-
+    <path-finder-canvas src="deer_ridge.png"></path-finder-canvas>
 
 </body>
 
