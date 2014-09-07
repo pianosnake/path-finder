@@ -1,4 +1,4 @@
-angular.module('pathFinder', ['astar'])
+angular.module('pathFinder', ['astar', 'canvas'])
 
 .filter('pointDisplay', function(){
   return function(pt){
@@ -10,8 +10,8 @@ angular.module('pathFinder', ['astar'])
   }
 })
 
-.directive('pathFinderCanvas', ['astarService', function(astar){
-  var imageData, el, width, height, context, contextImageData;
+.directive('pathFinderCanvas', ['astarService', 'canvasService', function(astar, canvas){
+  var imageData, canvas, width, height, context, contextImageData;
 
   var getPosition = function(event){
     var x, y, v;
@@ -23,8 +23,8 @@ angular.module('pathFinder', ['astar'])
       x = event.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
       y = event.clientY + document.body.scrollTop + document.documentElement.scrollTop;
     }
-    x -= el.offsetLeft;
-    y -= el.offsetTop;
+    x -= canvas.offsetLeft;
+    y -= canvas.offsetTop;
     v = imageData[4 * (x + width * y)];
     return {x:x, y:y, v:v};
   };
@@ -56,22 +56,20 @@ angular.module('pathFinder', ['astar'])
 
   return {
     restrict:'E',
-    replace:true,
-    template:'<canvas></canvas>',
-    controller:'canvasCtrl',
+    templateUrl:'app/path-finder-canvas.html',
 
     link:function(scope, elem, attrs){
-      context = elem[0].getContext('2d');
+      canvas = elem.find('canvas')[0];
+      context = canvas.getContext('2d');
       var img = new Image();
 
       //define an image load event first
       img.onload = function(){
         width = img.width;
         height = img.height;
-        elem[0].setAttribute("width", width);
-        elem[0].setAttribute("height", height);
+        canvas.setAttribute("width", width);
+        canvas.setAttribute("height", height);
         context.drawImage(img, 0, 0);
-        el = elem[0];
 
         //save the image data for quick lookup
         contextImageData = context.getImageData(0, 0, width, height)
