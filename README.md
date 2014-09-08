@@ -4,4 +4,6 @@ Click the landscape to set a start point, click it again to set an end point. Th
 To run locally, first get the dependencies with Bower and then open index.html.
 `bower install`
 
+[Live demo here](http://rintintin.colorado.edu/~alexandf/path.htm])
+
 ![Alt text](/images/deer_ridge_example.png "Deer Ridge with solved path")
