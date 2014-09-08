@@ -19,19 +19,19 @@ angular.module('astar', []).
     e={},
     imageData, width, height, endPt;
 
-    function solve(startPt, _endPt_, _imageData_, _width_, _height_){
+    function solve(from, to, _imageData_){
       low = null;
       o=[];
       e={};
-      imageData = _imageData_;
-      width = _width_;
-      height = _height_;
-      endPt = _endPt_;
+      imageData = _imageData_.data;
+      width = _imageData_.width;
+      height = _imageData_.height;
+      endPt = to;
       //add start point to the open list.  regular push is ok since there's just one item
-      o.push(startPt);
-      e[startPt.p]=startPt;
+      o.push(from);
+      e[from.p]=from;
       //iterate through open list until the end point is in the closed list
-      while(!inClosed(endPt)){
+      while(!inClosed(to)){
         iterateOpen();
       }
       return tracePath();
