@@ -60,7 +60,6 @@ angular.module('pathFinder', ['astar'])
         scope.$digest();
       });
 
-
       elem.bind('mousedown', function(event){
         var pt = getPosition(event);
         var ptLookupKey = pt.x + "-" + pt.y;
@@ -92,6 +91,3 @@ angular.module('pathFinder', ['astar'])
 
   };
 }]);
-
-
-

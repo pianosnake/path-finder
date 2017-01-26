@@ -99,7 +99,6 @@ angular.module('astar', []).
       }
     }
 
-
     function getNeighbors(p){
       //returns an array of all the neighbors.  each point is an object with properties
       // p: 'x-y'  the written form of the point
@@ -148,6 +147,4 @@ angular.module('astar', []).
     return {
       solve: solve
     };
-
-
   });

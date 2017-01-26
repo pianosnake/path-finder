@@ -1,9 +1,0 @@
-{
-  "name": "path-finder",
-  "version": "0.1.0",
-  "dependencies": {
-    "jasmine":"2.0.0", 
-    "underscore":"1.7.0",
-    "angular": "1.2.x"
-  }
-}
