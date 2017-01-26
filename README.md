@@ -5,6 +5,6 @@ Click the landscape to set a start point, click it again to set an end point. Th
 To run locally, first get the dependencies with Bower (`bower install`) and then open index.html.
 
 
-[Live demo here](http://rintintin.colorado.edu/~alexandf/path.htm)
+[Live demo here](http://pianosnake.github.io/path-finder/index.html)
 
 ![Alt text](/images/deer_ridge_example.png "Deer Ridge with solved path")
